@@ -3,7 +3,12 @@ const mongoose=require('mongoose');
 const path=require('path');
 const ejs=require('ejs');
 const Blog=require('./model/Blog');
+const fileUpload = require('express-fileupload')
+const methodOverride = require('method-override')
 
+
+const BlogController=require('./controllers/BlogController')
+const PageController=require('./controllers/PageController')
 
 const app=express();
 
@@ -17,44 +22,23 @@ mongoose.connect('mongodb://0.0.0.0:27017/cleanblog-test-db ')
 app.use(express.static(path.resolve(__dirname + '/public')));
 app.use(express.urlencoded({extended:true}))
 app.use(express.json())
-
+app.use(fileUpload())
+app.use(methodOverride('_method',{
+  methods:['POST','GET']
+}))
 
 
 //Routes
-app.get('/', async(req, res) => {
-  const posts= await Blog.find({})
-    res.render('index', {
-      posts
-    })
-  });
-
-  app.get('/posts/:id', async(req, res) => {
-    const post=await Blog.findById(req.params.id)
-    res.render('post',{
-      post
-    })
-  });
-  
-  
-  app.get('/about', (req, res) => {
-    res.render('about');
-  });
-  
-  app.get('/add_post', async (req, res) => {
-    res.render('add_post')
-  });
-  
-  app.get('/post', (req, res) => {
-    res.render('post');
-  });
+app.get('/',BlogController.getAllBlog);
+app.get('/posts/:id',BlogController.getBlog);
+app.get('/about',PageController.getABout);
+app.get('/add_post',PageController.getAddNewpost );
+app.get('/posts/edit/:id',PageController.getEditPost )
+app.post('/posts',BlogController.getCreatepost)
+app.delete('/post/:id',BlogController.deletePost)
+app.put('/posts/:id',BlogController.updatePost)
 
 
-// "Add New Post" sayfamızdan göndericeğimiz veriler req.body ile 
-// yakalayalım, gerekli middleware fonksiyonarını kullanalım.
-app.post('/posts',async(req,res)=>{
-  Blog.create(req.body)
-  res.redirect('/')
-})
 
 
 const port = 5000
